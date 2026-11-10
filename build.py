@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """Сборка Буксира: src/page.html + src/app.js + vendor + логотип.
+Шрифты: fonts/*.ttf (Unbounded, Onest; латиница и кириллица) вшиваются base64.
 Выход: Buksir.html (автономная страница) и dist/artifact.html (для публикации артефактом)."""
 import json, pathlib
 
 ROOT = pathlib.Path(__file__).parent
 page = (ROOT / 'src/page.html').read_text(encoding='utf-8')
-app = (ROOT / 'src/app.js').read_text(encoding='utf-8')
+app = '\n'.join((ROOT / 'src' / f).read_text(encoding='utf-8') for f in ['text.js', 'templates.js', 'app.js'])
+import base64
+fonts = {f.stem: base64.b64encode(f.read_bytes()).decode() for f in sorted((ROOT / 'fonts').glob('*.ttf'))}
 logo = json.loads((ROOT / 'assets/logo.json').read_text(encoding='utf-8'))
 vendor = ''.join((ROOT / 'vendor' / f).read_text(encoding='utf-8') + '\n'
-                 for f in ['mp4-muxer.min.js', 'webm-muxer.min.js', 'gifenc.js'])
+                 for f in ['opentype.min.js', 'mp4-muxer.min.js', 'webm-muxer.min.js', 'gifenc.js'])
 
 for bad in ('</script', '<!--'):
     assert bad not in app, f'в app.js нельзя писать {bad!r}'
 
 scripts = ('<script>' + vendor + '</script>\n'
-           '<script>window.__LOGO__=' + json.dumps(logo, ensure_ascii=False) + ';</script>\n'
+           '<script>window.__LOGO__=' + json.dumps(logo, ensure_ascii=False) + ';window.__FONTS__=' + json.dumps(fonts) + ';</script>\n'
            '<script>' + app + '</script>\n')
 body = page + '\n' + scripts
 

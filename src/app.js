@@ -19,20 +19,38 @@ const FORMATS = [
   ['banner', 'Баннер', 1800, 800],
 ];
 
+// Палитра Буксира: чёрный, белый и основной красный #EC0F13. [id, название, фон, графика, текст]
 const THEMES = [
-  ['Бумага', '#F2F1EC', '#121212'],
-  ['Ночь', '#0F0F0F', '#F2F1EC'],
-  ['Коралл', '#F6F3EF', '#E0524B'],
-  ['Алый', '#121212', '#E0524B'],
-  ['Бетон', '#B7B5AF', '#151515'],
-  ['Графит', '#2A2A29', '#D9D6CF'],
+  ['white', 'Белый', '#FFFFFF', '#000000', '#000000'],
+  ['black', 'Чёрный', '#000000', '#FFFFFF', '#FFFFFF'],
+  ['red', 'Красный', RED, '#000000', '#FFFFFF'],
+  ['whiteRed', 'Белый, красная графика', '#FFFFFF', RED, '#000000'],
+  ['blackRed', 'Чёрный, красная графика', '#000000', RED, '#FFFFFF'],
+  ['redWhite', 'Красный, белая графика', RED, '#FFFFFF', '#000000'],
 ];
+const same = (a, b) => String(a).toUpperCase() === String(b).toUpperCase();
+// Второй цвет для двухцветной графики: красный, а если графика уже красная — цвет текста.
+const secondInk = () => same(S.ink, RED) ? (same(S.text, S.bg) ? '#000000' : S.text) : RED;
+function applyTheme(id) {
+  const t = THEMES.find(t => t[0] === id); if (!t) return;
+  S.theme = id; S.bg = t[2]; S.ink = t[3]; S.text = t[4];
+  S.inkB = S.twoTone ? secondInk() : S.ink;
+}
+// Цвет по роли: текст, фон, графика, акцент (красный; на красном фоне — цвет текста).
+function col(key) {
+  if (key === 'text') return S.text;
+  if (key === 'bg') return S.bg;
+  if (key === 'ink') return S.ink;
+  if (key === 'accent') return same(S.bg, RED) ? S.text : RED;
+  return key;
+}
 
 const SET_DEFAULT = { cx: .5, cy: .5, n: 22, w0: 120, h0: 40, sx: 22, sy: 22, t: 12, tg: 0, r: 100, rmode: 'prop', rfix: 40, dx: 0, dy: 0, speed: 1 };
 
 const S = {
   mode: 'struct', fmt: '4:5',
-  bg: '#F2F1EC', ink: '#121212', inkB: '#121212', twoTone: false, blend: 'xor', grain: 0,
+  bg: '#FFFFFF', ink: '#000000', inkB: '#000000', text: '#000000', theme: 'white', twoTone: false, blend: 'xor', grain: 0,
+  tpl: null, txt: {},
   setTab: 'A',
   A: { ...SET_DEFAULT },
   B: { ...SET_DEFAULT },
@@ -45,47 +63,47 @@ const S = {
 
 /* ---------- заготовки ---------- */
 const P_STRUCT = [
-  ['Капсула', { bg: '#F2F1EC', ink: '#121212', blend: 'xor',
+  ['Капсула', { bg: '#FFFFFF', ink: '#000000', blend: 'xor',
     A: { cx: .5, cy: .5, n: 26, w0: 300, h0: 36, sx: 22, sy: 22, t: 11, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: .5, n: 26, w0: 36, h0: 36, sx: 24, sy: 28, t: 11, tg: 0, r: 70, rmode: 'prop', dx: 0, dy: 0, speed: -1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Тоннель', { bg: '#F2F1EC', ink: '#121212', blend: 'xor',
+  ['Тоннель', { bg: '#FFFFFF', ink: '#000000', blend: 'xor',
     A: { cx: .5, cy: .5, n: 30, w0: 140, h0: 50, sx: 30, sy: 18, t: 13, tg: .25, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: .5, n: 30, w0: 50, h0: 140, sx: 18, sy: 30, t: 13, tg: .25, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     logo: { on: true, pos: 'c', vertical: false, plate: true, size: 22 } }],
-  ['Перекрестие', { bg: '#F7F6F3', ink: '#121212', blend: 'xor',
+  ['Перекрестие', { bg: '#FFFFFF', ink: '#000000', blend: 'xor',
     A: { cx: .5, cy: .56, n: 18, w0: 60, h0: 150, sx: 9, sy: 16, t: 2.5, tg: 0, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: .56, n: 18, w0: 150, h0: 60, sx: 16, sy: 9, t: 2.5, tg: 0, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Овал', { bg: '#F2F1EC', ink: '#121212', blend: 'xor',
+  ['Овал', { bg: '#FFFFFF', ink: '#000000', blend: 'xor',
     A: { cx: .5, cy: .5, n: 24, w0: 200, h0: 40, sx: 18, sy: 18, t: 9, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: .5, n: 24, w0: 40, h0: 200, sx: 18, sy: 18, t: 9, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Сетка', { bg: '#F6F3EF', ink: '#E0524B', blend: 'xor',
+  ['Сетка', { bg: '#FFFFFF', ink: RED, blend: 'xor',
     A: { cx: .5, cy: .5, n: 34, w0: 40, h0: 120, sx: 15, sy: 15, t: 7.5, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: .5, n: 34, w0: 40, h0: 120, sx: 15.6, sy: 14.4, t: 7.5, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Купол', { bg: '#F2F1EC', ink: '#121212', blend: 'xor',
+  ['Купол', { bg: '#FFFFFF', ink: '#000000', blend: 'xor',
     A: { cx: .5, cy: .66, n: 22, w0: 6000, h0: 16, sx: 0, sy: 22, t: 11, tg: 0, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: 1.02, n: 26, w0: 30, h0: 30, sx: 22, sy: 22, t: 11, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: -1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Арка', { bg: '#F2F1EC', ink: '#121212', blend: 'xor',
+  ['Арка', { bg: '#FFFFFF', ink: '#000000', blend: 'xor',
     A: { cx: .5, cy: 1.2, n: 20, w0: 24, h0: 1500, sx: 23, sy: 23, t: 11, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .5, cy: .98, n: 22, w0: 24, h0: 24, sx: 23, sy: 23, t: 11, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: -1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Пара', { bg: '#F6F3EF', ink: '#E0524B', blend: 'xor',
+  ['Пара', { bg: '#FFFFFF', ink: RED, blend: 'xor',
     A: { cx: .3, cy: .5, n: 20, w0: 30, h0: 240, sx: 16, sy: 16, t: 8, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     B: { cx: .7, cy: .5, n: 20, w0: 30, h0: 240, sx: 16, sy: 16, t: 8, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
 ];
 const P_RINGS = [
-  ['Тоннель', { bg: '#F7F6F3', R: { cx: .5, cy: .52, n: 16, w0: 150, h0: 230, sx: 26, sy: 30, t: 22, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1, zoom0: 100, zstep: 7, gaps: 'bg', center: true, ox: 0, oy: 0 },
+  ['Тоннель', { bg: '#FFFFFF', R: { cx: .5, cy: .52, n: 16, w0: 150, h0: 230, sx: 26, sy: 30, t: 22, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: 0, speed: 1, zoom0: 100, zstep: 7, gaps: 'bg', center: true, ox: 0, oy: 0 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Рамы', { bg: '#F7F6F3', R: { cx: .5, cy: .5, n: 14, w0: 220, h0: 280, sx: 26, sy: 32, t: 20, tg: 1, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1, zoom0: 100, zstep: 9, gaps: 'bg', center: true, ox: 0, oy: 0 },
+  ['Рамы', { bg: '#FFFFFF', R: { cx: .5, cy: .5, n: 14, w0: 220, h0: 280, sx: 26, sy: 32, t: 20, tg: 1, r: 0, rmode: 'prop', dx: 0, dy: 0, speed: 1, zoom0: 100, zstep: 9, gaps: 'bg', center: true, ox: 0, oy: 0 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Сквозь', { bg: '#121212', R: { cx: .5, cy: .5, n: 24, w0: 120, h0: 120, sx: 22, sy: 26, t: 18, tg: 0, r: 40, rmode: 'prop', dx: 0, dy: 0, speed: 1, zoom0: 100, zstep: -3, gaps: 'img', center: true, ox: 0, oy: 0 },
+  ['Сквозь', { bg: '#000000', R: { cx: .5, cy: .5, n: 24, w0: 120, h0: 120, sx: 22, sy: 26, t: 18, tg: 0, r: 40, rmode: 'prop', dx: 0, dy: 0, speed: 1, zoom0: 100, zstep: -3, gaps: 'img', center: true, ox: 0, oy: 0 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
-  ['Подъём', { bg: '#F7F6F3', R: { cx: .5, cy: .78, n: 18, w0: 120, h0: 60, sx: 26, sy: 26, t: 20, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: -9, speed: 1, zoom0: 100, zstep: 8, gaps: 'bg', center: true, ox: 0, oy: 0 },
+  ['Подъём', { bg: '#FFFFFF', R: { cx: .5, cy: .78, n: 18, w0: 120, h0: 60, sx: 26, sy: 26, t: 20, tg: 0, r: 100, rmode: 'prop', dx: 0, dy: -9, speed: 1, zoom0: 100, zstep: 8, gaps: 'bg', center: true, ox: 0, oy: 0 },
     logo: { on: true, pos: 'tl', vertical: false, plate: false, size: 22 } }],
 ];
 const P_TRAIL = [
@@ -142,7 +160,8 @@ function rings(P, tau, W, H, u, still) {
 }
 
 /* ---------- фото ---------- */
-let IMG = null, IMG_GRAY = null, IMG_NAME = 'Пример', IMG_URL_CACHE = { color: null, gray: null };
+let IMG = null, IMG_GRAY = null, IMG_RED = null, IMG_NAME = 'Пример', IMG_URL_CACHE = {};
+let PARTNER = null, PARTNER_URL = null;
 function makeDemo() {
   const c = document.createElement('canvas'); c.width = 1200; c.height = 1500;
   const g = c.getContext('2d');
@@ -170,14 +189,26 @@ function setImage(src, name) {
   const iw = src.naturalWidth || src.width, ih = src.naturalHeight || src.height;
   const c = document.createElement('canvas'); c.width = iw; c.height = ih;
   const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+  const c2 = document.createElement('canvas'); c2.width = iw; c2.height = ih;
+  const g2 = c2.getContext('2d');
   try {
     const d = g.getImageData(0, 0, iw, ih); const a = d.data;
-    for (let i = 0; i < a.length; i += 4) { const l = a[i] * .2126 + a[i + 1] * .7152 + a[i + 2] * .0722; a[i] = a[i + 1] = a[i + 2] = l; }
-    g.putImageData(d, 0, 0);
+    const d2 = g2.createImageData(iw, ih); const b = d2.data;
+    const R = [236, 15, 19];
+    for (let i = 0; i < a.length; i += 4) {
+      const l = a[i] * .2126 + a[i + 1] * .7152 + a[i + 2] * .0722;
+      a[i] = a[i + 1] = a[i + 2] = l;
+      // красный дуотон: чёрный → #EC0F13 → белый
+      const t = l / 255;
+      if (t < .55) { const k = t / .55; b[i] = R[0] * k; b[i + 1] = R[1] * k; b[i + 2] = R[2] * k; }
+      else { const k = (t - .55) / .45; b[i] = R[0] + (255 - R[0]) * k; b[i + 1] = R[1] + (255 - R[1]) * k; b[i + 2] = R[2] + (255 - R[2]) * k; }
+      b[i + 3] = a[i + 3];
+    }
+    g.putImageData(d, 0, 0); g2.putImageData(d2, 0, 0);
   } catch (e) { /* без ч/б */ }
-  IMG_GRAY = c; IMG_URL_CACHE = { color: null, gray: null };
+  IMG_GRAY = c; IMG_RED = c2; IMG_URL_CACHE = {};
 }
-function img(tone) { return tone === 'gray' ? IMG_GRAY : IMG; }
+function img(tone) { return tone === 'gray' ? IMG_GRAY : tone === 'red' ? IMG_RED : IMG; }
 function imgSize() { return [IMG.naturalWidth || IMG.width, IMG.naturalHeight || IMG.height]; }
 // Матрица, вписывающая фото с заполнением (cover) в прямоугольник, с масштабом z вокруг точки (fx,fy) прямоугольника.
 function coverMatrix(x, y, w, h, z, fx = .5, fy = .5) {
@@ -190,9 +221,32 @@ function coverMatrix(x, y, w, h, z, fx = .5, fy = .5) {
 
 /* ---------- построение сцены ---------- */
 // Сцена — список слоёв, общий для холста и SVG.
-function buildScene(W, H, tau, still) {
+const curTpl = () => S.tpl ? TEMPLATES.find(t => t.id === S.tpl) : null;
+function areaRect(W, H) {
+  const u = Math.min(W, H) / 1080, tp = curTpl();
+  const a = tp && tp.area ? tp.area(W, H, u) : null;
+  return a ? { x: Math.round(a.x), y: Math.round(a.y), w: Math.max(1, Math.round(a.w)), h: Math.max(1, Math.round(a.h)) } : null;
+}
+let OVERLAY = { key: '', groups: [] };
+function overlayGroups(W, H) {
+  const tp = curTpl(); if (!tp) return [];
+  const F = S.txt[tp.id] || {};
+  const key = JSON.stringify([tp.id, F, W, H, S.bg, S.text, S.ink, PARTNER_URL ? PARTNER_URL.length : 0]);
+  if (OVERLAY.key === key) return OVERLAY.groups;
   const u = Math.min(W, H) / 1080;
-  const sc = { W, H, u, layers: [] };
+  const L = { W, H, u, m: 64 * u,
+    stack: (sp) => stackGroup(sp, col), dateline: (sp) => datelineGroup(sp, col, u), row: (sp) => rowGroup(sp, col),
+    list: (sp) => listGroup(sp, col, u), logo: (sp) => logoGroup(sp, col), partner: (sp) => partnerGroup(sp), rect: (sp) => rectGroup(sp, col) };
+  const groups = tp.layout(L, F).filter(Boolean);
+  OVERLAY = { key, groups };
+  return groups;
+}
+function buildScene(W0, H0, tau, still) {
+  const u = Math.min(W0, H0) / 1080;
+  const ar = areaRect(W0, H0);
+  const sc = { W: W0, H: H0, u, layers: [], area: ar };
+  // графика строится в своей зоне: W, H — размеры зоны
+  const W = ar ? ar.w : W0, H = ar ? ar.h : H0;
   if (S.mode === 'struct') {
     const A = rings(S.A, tau, W, H, u, still).map(r => r.d).join('');
     const B = rings(S.B, tau, W, H, u, still).map(r => r.d).join('');
@@ -242,52 +296,72 @@ function buildScene(W, H, tau, still) {
     for (const it of items) sc.layers.push({ kind: 'img', m: it.m, clip: it.clip, alpha: it.a, tone: T.tone });
     sc.base = { x: px, y: py, w: bw, h: bh, Fx, Fy };
   }
-  // логотип
+  sc.groups = overlayGroups(W0, H0);
+  if (S.tpl) return sc;
+  // логотип (без шаблона)
   if (S.logo.on) {
     const L = S.logo;
-    const lw = L.size / 100 * (L.vertical ? H : W);
+    const lw = L.size / 100 * (L.vertical ? H0 : W0);
     const k = lw / LOGO.w, lh = LOGO.h * k;
-    const mg = Math.min(W, H) * 0.05;
+    const mg = Math.min(W0, H0) * 0.05;
     const [ax, ay] = ANCH[L.pos] || [0, 0];
     const bw = L.vertical ? lh : lw, bh = L.vertical ? lw : lh;
-    const x = mg + ax * (W - 2 * mg - bw), y = mg + ay * (H - 2 * mg - bh);
+    const x = mg + ax * (W0 - 2 * mg - bw), y = mg + ay * (H0 - 2 * mg - bh);
     let m;
     if (L.vertical) m = [0, -k, k, 0, x, y + bh];      // поворот на −90°, читается снизу вверх
     else m = [k, 0, 0, k, x, y];
     const pad = lh * 0.45;
-    sc.logo = { m, color: L.color === 'bg' ? S.bg : (S.mode === 'struct' ? S.ink : (L.color === 'ink' ? S.ink : S.bg)), plate: L.plate ? { x: x - pad, y: y - pad, w: bw + 2 * pad, h: bh + 2 * pad } : null };
+    sc.logo = { m, color: L.color === 'bg' ? S.bg : S.text, plate: L.plate ? { x: x - pad, y: y - pad, w: bw + 2 * pad, h: bh + 2 * pad } : null };
   }
   return sc;
 }
 
 /* ---------- отрисовка на холсте ---------- */
 let LAYER = null;
+const P2D = new Map();
+function p2d(d) { let p = P2D.get(d); if (!p) { p = new Path2D(d); if (P2D.size > 3000) P2D.clear(); P2D.set(d, p); } return p; }
 function drawScene(ctx, sc) {
-  const { W, H } = sc;
+  const { W, H } = sc, ar = sc.area;
+  const ox = ar ? ar.x : 0, oy = ar ? ar.y : 0;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = S.bg; ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  if (ar) { ctx.beginPath(); ctx.rect(ar.x, ar.y, ar.w, ar.h); ctx.clip(); ctx.translate(ox, oy); }
   for (const L of sc.layers) {
-    if (L.kind === 'struct') drawStruct(ctx, L, W, H);
+    if (L.kind === 'struct') drawStruct(ctx, L, W, H, ox, oy);
     else {
       ctx.save();
       if (L.clip) ctx.clip(new Path2D(L.clip), 'evenodd');
       ctx.globalAlpha = L.alpha;
-      ctx.setTransform(...L.m);
+      ctx.setTransform(L.m[0], L.m[1], L.m[2], L.m[3], L.m[4] + ox, L.m[5] + oy);
       ctx.drawImage(img(L.tone), 0, 0);
       ctx.restore();
     }
   }
+  ctx.restore();
   if (S.grain > 0) drawGrain(ctx, W, H);
+  for (const g of sc.groups || []) {
+    ctx.save(); ctx.setTransform(...g.tf);
+    for (const q of g.prims) {
+      ctx.globalAlpha = q.alpha == null ? 1 : q.alpha;
+      if (q.p === 'rect') { ctx.fillStyle = q.fill; ctx.fillRect(q.x, q.y, q.w, q.h); }
+      else if (q.p === 'path') { ctx.fillStyle = q.fill; ctx.fill(p2d(q.d)); }
+      else if (q.p === 'logo') { ctx.save(); ctx.transform(...q.m); ctx.fillStyle = q.fill; ctx.fill(LOGO_PATH, 'evenodd'); ctx.restore(); }
+      else if (q.p === 'img' && PARTNER) ctx.drawImage(PARTNER, q.x, q.y, q.w, q.h);
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
   if (sc.logo) {
     const g = sc.logo;
     ctx.save();
-    if (g.plate) { ctx.fillStyle = g.color === S.bg ? S.ink : S.bg; ctx.fillRect(g.plate.x, g.plate.y, g.plate.w, g.plate.h); }
+    if (g.plate) { ctx.fillStyle = g.color === S.bg ? S.text : S.bg; ctx.fillRect(g.plate.x, g.plate.y, g.plate.w, g.plate.h); }
     ctx.setTransform(...g.m); ctx.fillStyle = g.color; ctx.fill(LOGO_PATH, 'evenodd');
     ctx.restore();
   }
 }
-function drawStruct(ctx, L, W, H) {
+function drawStruct(ctx, L, W, H, ox = 0, oy = 0) {
   const pa = new Path2D(L.A), pb = new Path2D(L.B);
   const cA = S.ink, cB = S.twoTone ? S.inkB : S.ink;
   if (S.blend === 'a') { ctx.fillStyle = cA; ctx.fill(pa, 'evenodd'); return; }
@@ -296,11 +370,13 @@ function drawStruct(ctx, L, W, H) {
   if (!S.twoTone) { ctx.fillStyle = cA; ctx.fill(new Path2D(L.A + L.B), 'evenodd'); return; }
   if (!LAYER || LAYER.width !== W || LAYER.height !== H) { LAYER = document.createElement('canvas'); LAYER.width = W; LAYER.height = H; }
   const g = LAYER.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
   g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H);
+  g.setTransform(1, 0, 0, 1, ox, oy);
   g.fillStyle = cA; g.fill(pa, 'evenodd');
   g.globalCompositeOperation = 'xor'; g.fillStyle = cB; g.fill(pb, 'evenodd');
-  g.globalCompositeOperation = 'source-over';
-  ctx.drawImage(LAYER, 0, 0);
+  g.globalCompositeOperation = 'source-over'; g.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(LAYER, 0, 0); ctx.restore();
 }
 let GRAIN = null;
 function drawGrain(ctx, W, H) {
@@ -317,43 +393,64 @@ function drawGrain(ctx, W, H) {
 
 /* ---------- SVG ---------- */
 function imageDataURL(tone) {
-  const key = tone === 'gray' ? 'gray' : 'color';
+  const key = tone || 'color';
   if (IMG_URL_CACHE[key]) return IMG_URL_CACHE[key];
   const src = img(tone); const [iw, ih] = imgSize();
   const c = document.createElement('canvas'); c.width = iw; c.height = ih;
   c.getContext('2d').drawImage(src, 0, 0);
   return (IMG_URL_CACHE[key] = c.toDataURL('image/jpeg', 0.92));
 }
+const mx = (m) => `matrix(${m.map(v => +(+v).toFixed(5)).join(' ')})`;
 function sceneSVG(sc) {
-  const { W, H } = sc; const out = [];
+  const { W, H } = sc, ar = sc.area; const out = [];
   const defs = [];
-  out.push(`<rect width="${W}" height="${H}" fill="${S.bg}"/>`);
+  out.push(`<rect id="background" width="${W}" height="${H}" fill="${S.bg}"/>`);
   let clipN = 0; const usedTones = new Set();
+  const gr = [];
   for (const L of sc.layers) {
     if (L.kind === 'struct') {
       const cA = S.ink, cB = S.twoTone ? S.inkB : S.ink;
-      if (S.blend === 'a') out.push(`<path id="A" fill="${cA}" fill-rule="evenodd" d="${L.A}"/>`);
-      else if (S.blend === 'b') out.push(`<path id="B" fill="${cB}" fill-rule="evenodd" d="${L.B}"/>`);
-      else if (S.blend === 'over') out.push(`<path id="A" fill="${cA}" fill-rule="evenodd" d="${L.A}"/><path id="B" fill="${cB}" fill-rule="evenodd" d="${L.B}"/>`);
-      else if (!S.twoTone) out.push(`<path id="A-xor-B" fill="${cA}" fill-rule="evenodd" d="${L.A}${L.B}"/>`);
+      if (S.blend === 'a') gr.push(`<path id="A" fill="${cA}" fill-rule="evenodd" d="${L.A}"/>`);
+      else if (S.blend === 'b') gr.push(`<path id="B" fill="${cB}" fill-rule="evenodd" d="${L.B}"/>`);
+      else if (S.blend === 'over') gr.push(`<path id="A" fill="${cA}" fill-rule="evenodd" d="${L.A}"/><path id="B" fill="${cB}" fill-rule="evenodd" d="${L.B}"/>`);
+      else if (!S.twoTone) gr.push(`<path id="A-xor-B" fill="${cA}" fill-rule="evenodd" d="${L.A}${L.B}"/>`);
       else {
-        defs.push(`<mask id="notB" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><path fill="#000" fill-rule="evenodd" d="${L.B}"/></mask>`);
-        defs.push(`<mask id="notA" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><path fill="#000" fill-rule="evenodd" d="${L.A}"/></mask>`);
-        out.push(`<path id="A" fill="${cA}" fill-rule="evenodd" mask="url(#notB)" d="${L.A}"/><path id="B" fill="${cB}" fill-rule="evenodd" mask="url(#notA)" d="${L.B}"/>`);
+        defs.push(`<mask id="notB" maskUnits="userSpaceOnUse" x="-${W}" y="-${H}" width="${3 * W}" height="${3 * H}"><rect x="-${W}" y="-${H}" width="${3 * W}" height="${3 * H}" fill="#fff"/><path fill="#000" fill-rule="evenodd" d="${L.B}"/></mask>`);
+        defs.push(`<mask id="notA" maskUnits="userSpaceOnUse" x="-${W}" y="-${H}" width="${3 * W}" height="${3 * H}"><rect x="-${W}" y="-${H}" width="${3 * W}" height="${3 * H}" fill="#fff"/><path fill="#000" fill-rule="evenodd" d="${L.A}"/></mask>`);
+        gr.push(`<path id="A" fill="${cA}" fill-rule="evenodd" mask="url(#notB)" d="${L.A}"/><path id="B" fill="${cB}" fill-rule="evenodd" mask="url(#notA)" d="${L.B}"/>`);
       }
     } else {
-      const tone = L.tone === 'gray' ? 'gray' : 'color'; usedTones.add(tone);
+      const tone = L.tone || 'color'; usedTones.add(tone);
       let g = '<g';
       if (L.clip) { const id = 'c' + (clipN++); defs.push(`<clipPath id="${id}"><path clip-rule="evenodd" d="${L.clip}"/></clipPath>`); g += ` clip-path="url(#${id})"`; }
       if (L.alpha < 1) g += ` opacity="${n2(L.alpha)}"`;
-      out.push(`${g}><use href="#img-${tone}" transform="matrix(${L.m.map(v => +v.toFixed(5)).join(' ')})"/></g>`);
+      gr.push(`${g}><use href="#img-${tone}" transform="${mx(L.m)}"/></g>`);
     }
   }
+  if (ar) {
+    defs.push(`<clipPath id="area"><rect x="${ar.x}" y="${ar.y}" width="${ar.w}" height="${ar.h}"/></clipPath>`);
+    out.push(`<g id="graphic" clip-path="url(#area)"><g transform="translate(${ar.x} ${ar.y})">${gr.join('')}</g></g>`);
+  } else out.push(`<g id="graphic">${gr.join('')}</g>`);
   for (const t of usedTones) { const [iw, ih] = imgSize(); defs.push(`<image id="img-${t}" width="${iw}" height="${ih}" href="${imageDataURL(t)}"/>`); }
+  if (sc.groups && sc.groups.length) {
+    const tx = [];
+    for (const g of sc.groups) {
+      const ps = g.prims.map(q => {
+        const op = q.alpha != null && q.alpha < 1 ? ` opacity="${n2(q.alpha)}"` : '';
+        if (q.p === 'rect') return `<rect x="${n2(q.x)}" y="${n2(q.y)}" width="${n2(q.w)}" height="${n2(q.h)}" fill="${q.fill}"${op}/>`;
+        if (q.p === 'path') return `<path fill="${q.fill}" d="${q.d}"${op}/>`;
+        if (q.p === 'logo') return `<path class="logo" fill="${q.fill}" fill-rule="evenodd" transform="${mx(q.m)}" d="${LOGO.d}"/>`;
+        if (q.p === 'img' && PARTNER_URL) return `<image class="partner" x="${n2(q.x)}" y="${n2(q.y)}" width="${n2(q.w)}" height="${n2(q.h)}" href="${PARTNER_URL}"/>`;
+        return '';
+      }).join('');
+      tx.push(g.tf.join(',') === '1,0,0,1,0,0' ? `<g>${ps}</g>` : `<g transform="${mx(g.tf)}">${ps}</g>`);
+    }
+    out.push(`<g id="text">${tx.join('')}</g>`);
+  }
   if (sc.logo) {
     const g = sc.logo;
-    if (g.plate) out.push(`<rect x="${n2(g.plate.x)}" y="${n2(g.plate.y)}" width="${n2(g.plate.w)}" height="${n2(g.plate.h)}" fill="${g.color === S.bg ? S.ink : S.bg}"/>`);
-    out.push(`<path id="logo" fill="${g.color}" fill-rule="evenodd" transform="matrix(${g.m.map(v => +v.toFixed(5)).join(' ')})" d="${LOGO.d}"/>`);
+    if (g.plate) out.push(`<rect x="${n2(g.plate.x)}" y="${n2(g.plate.y)}" width="${n2(g.plate.w)}" height="${n2(g.plate.h)}" fill="${g.color === S.bg ? S.text : S.bg}"/>`);
+    out.push(`<path id="logo" fill="${g.color}" fill-rule="evenodd" transform="${mx(g.m)}" d="${LOGO.d}"/>`);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${defs.length ? '<defs>' + defs.join('') + '</defs>' : ''}${out.join('')}</svg>`;
 }
@@ -393,8 +490,11 @@ function update() { if (playing || pending) return; pending = true; requestAnima
 /* ---------- перетаскивание на макете ---------- */
 let drag = null;
 function toCanvas(e) { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * cv.width, (e.clientY - b.top) / b.height * cv.height]; }
+// Центры наборов задаются в долях зоны графики, поэтому координаты считаем от неё.
+function areaDims() { const [W0, H0] = fmtSize(); const a = areaRect(W0, H0); return a ? [a.w, a.h, a.x, a.y] : [W0, H0, 0, 0]; }
 cv.addEventListener('pointerdown', (e) => {
-  const [x, y] = toCanvas(e); const [W, H] = fmtSize(); const u = Math.min(W, H) / 1080;
+  const [x0, y0] = toCanvas(e); const [W, H, ax0, ay0] = areaDims(); const u = Math.min(...fmtSize()) / 1080;
+  const x = x0 - ax0, y = y0 - ay0;
   if (S.mode === 'struct') {
     let key = S.setTab;
     if (S.blend === 'xor' || S.blend === 'over') {
@@ -409,7 +509,8 @@ cv.addEventListener('pointerdown', (e) => {
 });
 cv.addEventListener('pointermove', (e) => {
   if (!drag) return;
-  const [x, y] = toCanvas(e); const [W, H] = fmtSize(); const u = Math.min(W, H) / 1080;
+  const [x0, y0] = toCanvas(e); const [W, H, ax0, ay0] = areaDims(); const u = Math.min(...fmtSize()) / 1080;
+  const x = x0 - ax0, y = y0 - ay0;
   const dx = x - drag.x, dy = y - drag.y;
   if (drag.key === 'T') { S.T.px = Math.round(drag.px + dx / u); S.T.py = Math.round(drag.py + dy / u); }
   else {
@@ -499,9 +600,9 @@ function setControls(key) {
 
 function themeRow() {
   const box = h('div', { class: 'themes' });
-  for (const [name, bg, ink] of THEMES) {
-    const b = h('button', { type: 'button', class: 'theme' }, h('i', { style: `background:${bg};box-shadow:inset -11px 0 0 ${ink}` }), h('span', {}, name));
-    b.addEventListener('click', () => { S.bg = bg; S.ink = ink; if (!S.twoTone) S.inkB = ink; buildPanel(); update(); });
+  for (const [id, name, bg, ink] of THEMES) {
+    const b = h('button', { type: 'button', class: 'theme', title: name, 'aria-pressed': String(S.theme === id) }, h('i', { style: `background:${bg};box-shadow:inset -11px 0 0 ${ink}` }), h('span', {}, name));
+    b.addEventListener('click', () => { applyTheme(id); buildPanel(); update(); });
     box.append(b);
   }
   return box;
@@ -532,15 +633,71 @@ function presetsRow(list) {
 }
 function applyPreset(patch) {
   const p = JSON.parse(JSON.stringify(patch));
+  if (S.tpl) { delete p.bg; delete p.ink; delete p.logo; }   // в шаблоне цвета и логотип задаёт шаблон
   if (p.A) S.A = { ...SET_DEFAULT, ...p.A };
   if (p.B) S.B = { ...SET_DEFAULT, ...p.B };
   if (p.R) S.R = { ...S.R, ...p.R };
   if (p.T) S.T = { ...S.T, ...p.T };
   delete p.A; delete p.B; delete p.R; delete p.T;
   merge(S, p);
-  if (!S.twoTone) S.inkB = S.ink;
+  if (p.bg && !p.text) {
+    const t = THEMES.find(t => same(t[2], S.bg) && same(t[3], S.ink));
+    if (t) { S.theme = t[0]; S.text = t[4]; } else S.text = same(S.bg, '#FFFFFF') ? '#000000' : '#FFFFFF';
+  }
+  S.inkB = S.twoTone ? secondInk() : S.ink;
   if (!playing) tau = 0;
   buildPanel(); update();
+}
+
+/* ---------- шаблоны рубрик ---------- */
+function applyTemplate(id) {
+  const t = TEMPLATES.find(t => t.id === id);
+  if (!t) { S.tpl = null; buildPanel(); update(); return; }
+  S.tpl = id;
+  if (!S.txt[id]) S.txt[id] = Object.fromEntries(t.fields.map(f => [f[0], f[2]]));
+  const sc = JSON.parse(JSON.stringify(t.scene));
+  S.twoTone = !!sc.twoTone; S.blend = sc.blend || 'xor';
+  if (sc.A) S.A = { ...SET_DEFAULT, ...sc.A };
+  if (sc.B) S.B = { ...SET_DEFAULT, ...sc.B };
+  if (sc.R) S.R = { ...S.R, ...sc.R };
+  if (sc.T) S.T = { ...S.T, ...sc.T };
+  applyTheme(sc.theme || 'white');
+  if (!playing) tau = 0;
+  setMode(sc.mode, true);
+}
+function templateSection() {
+  const groups = [];
+  for (const t of TEMPLATES) { let g = groups.find(g => g.name === t.group); if (!g) groups.push(g = { name: t.group, list: [] }); g.list.push(t); }
+  const kids = [];
+  for (const g of groups) {
+    const box = h('div', { class: 'presets', role: 'group', 'aria-label': g.name });
+    for (const t of g.list) box.append(h('button', { type: 'button', class: 'chipbtn', 'aria-pressed': String(S.tpl === t.id), onclick: () => applyTemplate(t.id) }, t.name));
+    kids.push(h('div', { class: 'tgroup' }, h('div', { class: 'tname' }, g.name), box));
+  }
+  kids.push(h('div', { class: 'presets' }, h('button', { type: 'button', class: 'chipbtn', 'aria-pressed': String(!S.tpl), onclick: () => applyTemplate(null) }, 'Без текста, только графика')));
+  const tp = curTpl();
+  if (tp) {
+    const F = S.txt[tp.id];
+    const fields = h('div', { class: 'fields' });
+    for (const [key, label, def, type] of tp.fields) {
+      const id = 'f-' + tp.id + '-' + key;
+      const el = type ? h('textarea', { id, rows: type === 'list' ? 9 : 2, spellcheck: 'true', class: type === 'list' ? 'list' : '', wrap: type === 'list' ? 'off' : 'soft' }) : h('input', { id, type: 'text', spellcheck: 'true' });
+      el.value = F[key] == null ? '' : F[key];
+      el.addEventListener('input', () => { F[key] = el.value; update(); });
+      fields.append(h('label', { class: 'field', for: id }, h('span', {}, label), el));
+    }
+    kids.push(fields);
+    const pbox = h('div', { class: 'imgbox' });
+    if (PARTNER_URL) pbox.append(h('img', { src: PARTNER_URL, alt: 'Логотип партнёра', style: 'object-fit:contain;background:#fff' }));
+    pbox.append(h('div', { class: 'meta' },
+      h('div', { class: 'name' }, PARTNER ? 'Логотип партнёра стоит в шапке' : 'Логотип партнёра, если нужен'),
+      h('div', { class: 'btns' },
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => $('partnerIn').click() }, PARTNER ? 'Заменить' : 'Загрузить'),
+        PARTNER ? h('button', { class: 'btn ghost', type: 'button', onclick: () => { PARTNER = null; PARTNER_URL = null; OVERLAY.key = ''; buildPanel(); update(); } }, 'Убрать') : null)));
+    kids.push(pbox);
+    kids.push(h('p', { class: 'note' }, 'Вёрстка подстраивается под формат: тот же шаблон работает в 4:5, сторис и квадрате. Длинный текст уменьшается, чтобы влезть.'));
+  }
+  return sec('Рубрика', ...kids);
 }
 
 function buildPanel() {
@@ -548,6 +705,7 @@ function buildPanel() {
   const st = panel.scrollTop;
   panel.replaceChildren();
   const m = S.mode;
+  panel.append(templateSection());
   if (m === 'struct') {
     panel.append(sec('Заготовки', presetsRow(P_STRUCT)));
     const tabs = h('div', { class: 'tabs', role: 'group', 'aria-label': 'Набор' });
@@ -564,7 +722,7 @@ function buildPanel() {
       range('R.ox', 'Сдвиг фото X', -800, 800, 1, px),
       range('R.oy', 'Сдвиг фото Y', -800, 800, 1, px),
       seg('R.gaps', 'Между', [['bg', 'Фон'], ['img', 'Фото']]),
-      seg('R.tone', 'Тон', [['color', 'Цвет'], ['gray', 'Ч/б']]),
+      seg('R.tone', 'Тон', [['color', 'Цвет'], ['gray', 'Ч/б'], ['red', 'Красный']]),
       h('div', {}, check('R.center', 'Фото в центре'))));
     panel.append(sec('Контуры', ...setControls('R')));
   } else {
@@ -580,7 +738,7 @@ function buildPanel() {
       range('T.fz', 'Кадр: масштаб', 100, 300, 1, pc),
       range('T.fx', 'Кадр: X', 0, 100, 1, pc),
       range('T.fy', 'Кадр: Y', 0, 100, 1, pc),
-      seg('T.tone', 'Тон', [['color', 'Цвет'], ['gray', 'Ч/б']])));
+      seg('T.tone', 'Тон', [['color', 'Цвет'], ['gray', 'Ч/б'], ['red', 'Красный']])));
     const pivAuto = T.pivot === 'auto';
     const pivRow = h('div', { style: 'display:grid;gap:8px' });
     pivRow.append(h('div', {}, check('T.pivotAuto__', 'Точка роста там же, где фото', (on) => { S.T.pivot = on ? 'auto' : 'c'; buildPanel(); update(); })));
@@ -597,21 +755,23 @@ function buildPanel() {
 
   // цвет
   const colorSec = sec('Цвет', themeRow(),
-    h('div', { class: 'colors' }, colorInput('bg', 'Фон'), colorInput('ink', m === 'struct' ? (S.twoTone ? 'Набор A' : 'Контуры') : 'Логотип'),
-      (m === 'struct' && S.twoTone) ? colorInput('inkB', 'Набор B') : null),
-    m === 'struct' ? h('div', {}, check('twoTone', 'Наборы разного цвета', (on) => { if (!on) S.inkB = S.ink; buildPanel(); })) : null,
+    h('div', { class: 'colors' }, colorInput('bg', 'Фон'), m === 'struct' ? colorInput('ink', S.twoTone ? 'Набор A' : 'Графика') : null,
+      (m === 'struct' && S.twoTone) ? colorInput('inkB', 'Набор B') : null, colorInput('text', 'Текст')),
+    m === 'struct' ? h('div', {}, check('twoTone', 'Второй набор красным', (on) => { S.inkB = on ? secondInk() : S.ink; buildPanel(); })) : null,
     range('grain', 'Зерно', 0, 100, 1, pc));
   panel.append(colorSec);
 
   // логотип
   const lg = [check('logo.on', 'Показывать логотип', () => buildPanel())];
+  if (!S.tpl) {
   if (S.logo.on) {
     lg.push(grid9('logo.pos', 'Место'));
     lg.push(range('logo.size', 'Длина', 6, 90, .5, pc));
-    if (m !== 'struct') lg.push(seg('logo.color', 'Цвет', [['ink', 'Как в цвете'], ['bg', 'Как фон']]));
+    lg.push(seg('logo.color', 'Цвет', [['ink', 'Как текст'], ['bg', 'Как фон']]));
     lg.push(h('div', { style: 'display:flex;gap:16px;flex-wrap:wrap' }, check('logo.vertical', 'Вертикально'), check('logo.plate', 'На плашке')));
   }
   panel.append(sec('Логотип', ...lg));
+  }
 
   // движение
   panel.append(sec('Движение',
@@ -642,7 +802,7 @@ async function saveFile(filename, data) {
 }
 function stamp() { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
 const MODE_NAME = { struct: 'interference', rings: 'rings', trail: 'trail' };
-function fname(ext) { return `buksir-${MODE_NAME[S.mode]}-${S.fmt.replace(':', 'x')}-${stamp()}.${ext}`; }
+function fname(ext) { return `buksir-${S.tpl || MODE_NAME[S.mode]}-${S.fmt.replace(':', 'x')}-${stamp()}.${ext}`; }
 function status(msg, err) { const s = $('status'); if (!s) return; s.textContent = msg; s.classList.toggle('err', !!err); }
 function progress(v) { const b = $('bar'); if (b) b.style.width = Math.round(v * 100) + '%'; }
 let busy = false;
@@ -763,8 +923,9 @@ async function recordGIF() {
 
 /* ---------- верхняя и нижняя панели ---------- */
 const VISITED = new Set();
-function setMode(m) {
+function setMode(m, keep) {
   S.mode = m;
+  if (keep) VISITED.add(m);
   if (!VISITED.has(m)) { VISITED.add(m); const first = { struct: P_STRUCT, rings: P_RINGS, trail: P_TRAIL }[m][0][1]; const keep = S.logo; applyPreset(first); S.logo = keep; }
   document.querySelectorAll('#modes button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
   $('hint').textContent = m === 'trail' ? 'Тяните фото на макете' : 'Тяните контуры на макете';
@@ -799,9 +960,18 @@ const wrap = $('wrap');
 ['dragleave', 'drop'].forEach(t => wrap.addEventListener(t, (e) => { e.preventDefault(); $('drop').hidden = true; if (t === 'drop' && e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); }));
 document.addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) loadFile(f); });
 
+$('partnerIn').addEventListener('change', (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f || !/^image\//.test(f.type)) return;
+  const rd = new FileReader();
+  rd.onload = () => { const im = new Image(); im.onload = () => { PARTNER = im; PARTNER_URL = rd.result; OVERLAY.key = ''; buildPanel(); update(); }; im.src = rd.result; };
+  rd.readAsDataURL(f);
+});
+
 /* ---------- старт ---------- */
 setImage(makeDemo(), 'Пример');
 applyPreset(P_STRUCT[0][1]);
 buildFormats();
-setMode('struct');
-window.__buksir = { S, render, buildScene, sceneSVG, setMode, applyPreset, P_STRUCT, P_RINGS, P_TRAIL, setTau: (t) => { tau = t; render(); }, renderTo };
+applyTemplate('lecture');
+window.__buksir = { S, render, buildScene, sceneSVG, setMode, applyPreset, applyTemplate, TEMPLATES, P_STRUCT, P_RINGS, P_TRAIL, setTau: (t) => { tau = t; render(); }, renderTo,
+  setFmt: (f) => { S.fmt = f; buildFormats(); render(); } };

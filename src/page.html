@@ -1,15 +1,12 @@
 <title>Буксир</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Студия: слева макет на сером столе, справа узкая панель управления. Чёрное на бумаге, акцент алый. */
 :root{
   --desk:#DEDCD7; --panel:#F7F6F3; --line:#D6D3CC; --fg:#151514; --mute:#77746D;
-  --accent:#C9301E; --chip:#ECEAE5; --on:#151514; --on-fg:#F7F6F3; --focus:#C9301E;
+  --accent:#EC0F13; --chip:#ECEAE5; --on:#151514; --on-fg:#F7F6F3; --focus:#EC0F13;
   --f-ui:"Onest",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --f-num:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --desk:#1B1B1A; --panel:#242423; --line:#383735; --fg:#EDEBE6; --mute:#9A978F;
@@ -54,6 +51,16 @@ button,input,select{font:inherit;color:inherit}
 .presets{display:flex;flex-wrap:wrap;gap:6px}
 .chipbtn{border:1px solid var(--line);background:var(--chip);border-radius:6px;padding:6px 10px;cursor:pointer}
 .chipbtn:hover{border-color:var(--fg)}
+.chipbtn[aria-pressed="true"]{background:var(--on);color:var(--on-fg);border-color:var(--on)}
+.tgroup{display:grid;gap:6px}
+.tname{font-size:12px;color:var(--mute)}
+.fields{display:grid;gap:8px;padding-top:4px}
+.field{display:grid;gap:4px}
+.field span{font-size:12px;color:var(--mute)}
+.field input,.field textarea{font:inherit;width:100%;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 9px;resize:vertical;line-height:1.35}
+.field textarea.list{font:12px/1.45 var(--f-num);white-space:pre;overflow-x:auto}
+.field input:focus,.field textarea:focus{border-color:var(--fg);outline:none}
+.theme[aria-pressed="true"]{border-color:var(--fg)}
 .row{display:grid;grid-template-columns:104px minmax(0,1fr) 52px;align-items:center;gap:8px}
 .row label{color:var(--fg)}
 .row output{font:12px var(--f-num);text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
@@ -64,7 +71,7 @@ input[type=range]{width:100%;accent-color:var(--fg);margin:0}
 .colors{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .sw{display:flex;align-items:center;gap:6px}
 .sw input[type=color]{width:30px;height:24px;border:1px solid var(--line);border-radius:5px;padding:0;background:none;cursor:pointer}
-.themes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.themes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .theme{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--panel);cursor:pointer;min-width:0}
 .theme i{width:22px;height:16px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.15)}
 .theme span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -127,3 +134,4 @@ input[type=range]{width:100%;accent-color:var(--fg);margin:0}
   <aside class="panel" id="panel" aria-label="Настройки"></aside>
 </div>
 <input type="file" id="fileIn" accept="image/*" hidden>
+<input type="file" id="partnerIn" accept="image/png,image/svg+xml,image/jpeg,image/webp" hidden>
