@@ -25,7 +25,15 @@ button,input,select{font:inherit;color:inherit}
 .stage{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px}
 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:14px 10px}
-.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand{display:flex;align-items:center;gap:10px}
+.maintabs{display:flex;gap:2px;margin-right:auto;margin-left:12px}
+.maintabs button{border:0;background:none;cursor:pointer;font:500 15px/1 var(--f-ui);padding:8px 10px 9px;color:var(--mute);border-bottom:2px solid transparent}
+.maintabs button:hover{color:var(--fg)}
+.maintabs button[aria-pressed="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+details.more{border-bottom:1px solid var(--line)}
+details.more>summary{cursor:pointer;padding:14px 16px;font:500 11px/1 var(--f-num);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);list-style-position:inside}
+details.more>summary:hover{color:var(--fg)}
+details.more>.sec{border-bottom:0;border-top:1px solid var(--line)}
 .brand svg{height:15px;width:auto;fill:var(--fg)}
 .brand span{font:500 11px/1 var(--f-num);color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
 .modes{display:flex;background:var(--chip);border-radius:999px;padding:3px}
@@ -114,6 +122,10 @@ input[type=range]{width:100%;accent-color:var(--fg);margin:0}
   <main class="stage">
     <div class="top">
       <div class="brand" id="brand"><span>генератор</span></div>
+      <div class="maintabs" id="tabsMain" role="group" aria-label="Раздел">
+        <button id="t-graphic" data-tab="graphic" aria-pressed="true">Графика</button>
+        <button id="t-rubric" data-tab="rubric" aria-pressed="false">Рубрики</button>
+      </div>
       <div class="modes" role="group" aria-label="Режим" id="modes">
         <button id="m-struct" data-mode="struct">Интерференция</button>
         <button id="m-rings" data-mode="rings">Фото в контурах</button>
@@ -673,7 +685,7 @@ const SET_DEFAULT = { cx: .5, cy: .5, n: 22, w0: 120, h0: 40, sx: 22, sy: 22, t:
 const S = {
   mode: 'struct', fmt: '4:5',
   bg: '#FFFFFF', ink: '#000000', inkB: '#000000', text: '#000000', theme: 'white', twoTone: false, blend: 'xor', grain: 0,
-  tpl: null, txt: {},
+  tpl: null, txt: {}, tab: null,
   setTab: 'A',
   A: { ...SET_DEFAULT },
   B: { ...SET_DEFAULT },
@@ -1256,7 +1268,8 @@ function presetsRow(list) {
 }
 function applyPreset(patch) {
   const p = JSON.parse(JSON.stringify(patch));
-  if (S.tpl) { delete p.bg; delete p.ink; delete p.logo; }   // в шаблоне цвета и логотип задаёт шаблон
+  delete p.logo;                                   // логотип включают руками
+  if (S.tpl) { delete p.bg; delete p.ink; }         // в шаблоне цвета задаёт шаблон
   if (p.A) S.A = { ...SET_DEFAULT, ...p.A };
   if (p.B) S.B = { ...SET_DEFAULT, ...p.B };
   if (p.R) S.R = { ...S.R, ...p.R };
@@ -1297,7 +1310,6 @@ function templateSection() {
     for (const t of g.list) box.append(h('button', { type: 'button', class: 'chipbtn', 'aria-pressed': String(S.tpl === t.id), onclick: () => applyTemplate(t.id) }, t.name));
     kids.push(h('div', { class: 'tgroup' }, h('div', { class: 'tname' }, g.name), box));
   }
-  kids.push(h('div', { class: 'presets' }, h('button', { type: 'button', class: 'chipbtn', 'aria-pressed': String(!S.tpl), onclick: () => applyTemplate(null) }, 'Без текста, только графика')));
   const tp = curTpl();
   if (tp) {
     const F = S.txt[tp.id];
@@ -1323,23 +1335,20 @@ function templateSection() {
   return sec('Рубрика', ...kids);
 }
 
-function buildPanel() {
-  bindings.length = 0;
-  const st = panel.scrollTop;
-  panel.replaceChildren();
-  const m = S.mode;
-  panel.append(templateSection());
+// Разделы настройки графики для режима m. В «Графике» с заготовками и фото, в «Рубриках» без них.
+function modeSections(m, withPresets) {
+  const out = [];
   if (m === 'struct') {
-    panel.append(sec('Заготовки', presetsRow(P_STRUCT)));
+    if (withPresets) out.push(sec('Заготовки', presetsRow(P_STRUCT)));
     const tabs = h('div', { class: 'tabs', role: 'group', 'aria-label': 'Набор' });
     for (const k of ['A', 'B']) tabs.append(h('button', { type: 'button', 'aria-pressed': String(S.setTab === k), onclick: () => { S.setTab = k; buildPanel(); } }, k));
-    panel.append(sec(['Набор', tabs, h('span', { class: 'grow' }, 'Shift + тянуть: оба')], ...setControls(S.setTab)));
-    panel.append(sec('Наложение',
+    out.push(sec(['Набор', tabs, h('span', { class: 'grow' }, 'Shift + тянуть: оба')], ...setControls(S.setTab)));
+    out.push(sec('Наложение',
       seg('blend', 'Режим', [['xor', 'Вычитание'], ['over', 'Поверх'], ['a', 'Только A'], ['b', 'Только B']])));
   } else if (m === 'rings') {
-    panel.append(sec('Заготовки', presetsRow(P_RINGS)));
-    panel.append(imageSection());
-    panel.append(sec('Фото в контурах',
+    if (withPresets) out.push(sec('Заготовки', presetsRow(P_RINGS)));
+    if (withPresets) out.push(imageSection());
+    out.push(sec('Фото в контурах',
       range('R.zoom0', 'Масштаб фото', 20, 400, 1, pc),
       range('R.zstep', 'Рост к краю', -20, 30, .5, (v) => (v > 0 ? '+' : '') + n2(v) + '%'),
       range('R.ox', 'Сдвиг фото X', -800, 800, 1, px),
@@ -1347,12 +1356,12 @@ function buildPanel() {
       seg('R.gaps', 'Между', [['bg', 'Фон'], ['img', 'Фото']]),
       seg('R.tone', 'Тон', [['color', 'Цвет'], ['gray', 'Ч/б'], ['red', 'Красный']]),
       h('div', {}, check('R.center', 'Фото в центре'))));
-    panel.append(sec('Контуры', ...setControls('R')));
+    out.push(sec('Контуры', ...setControls('R')));
   } else {
-    panel.append(sec('Заготовки', presetsRow(P_TRAIL)));
-    panel.append(imageSection());
+    if (withPresets) out.push(sec('Заготовки', presetsRow(P_TRAIL)));
+    if (withPresets) out.push(imageSection());
     const T = S.T;
-    panel.append(sec('Исходное фото',
+    out.push(sec('Исходное фото',
       grid9('T.anchor', 'Положение'),
       range('T.size', 'Размер', 4, 80, .5, pc),
       range('T.margin', 'Отступ', 0, 200, 1, px),
@@ -1367,7 +1376,7 @@ function buildPanel() {
     pivRow.append(h('div', {}, check('T.pivotAuto__', 'Точка роста там же, где фото', (on) => { S.T.pivot = on ? 'auto' : 'c'; buildPanel(); update(); })));
     pivRow.querySelector('input').checked = pivAuto;
     if (!pivAuto) pivRow.append(grid9('T.pivot', 'Точка роста'));
-    panel.append(sec('Шлейф',
+    out.push(sec('Шлейф',
       range('T.n', 'Копий', 2, 60, 1),
       range('T.end', 'Масштаб последней', 1, 30, .1, (v) => '×' + n2(v)),
       seg('T.dist', 'Шаг', [['geo', 'Ускоряется'], ['lin', 'Ровный']]),
@@ -1375,18 +1384,36 @@ function buildPanel() {
       pivRow,
       range('T.speed', 'Скорость', -4, 4, 1, (v) => (v > 0 ? '+' : '') + v)));
   }
+  return out;
+}
+
+let MORE_OPEN = false;
+function buildPanel() {
+  bindings.length = 0;
+  const st = panel.scrollTop;
+  panel.replaceChildren();
+  const m = S.mode;
+  if (S.tab === 'rubric') {
+    panel.append(templateSection());
+    if (m !== 'struct') panel.append(imageSection());
+  } else panel.append(...modeSections(m, true));
 
   // цвет
   const colorSec = sec('Цвет', themeRow(),
     h('div', { class: 'colors' }, colorInput('bg', 'Фон'), m === 'struct' ? colorInput('ink', S.twoTone ? 'Набор A' : 'Графика') : null,
-      (m === 'struct' && S.twoTone) ? colorInput('inkB', 'Набор B') : null, colorInput('text', 'Текст')),
+      (m === 'struct' && S.twoTone) ? colorInput('inkB', 'Набор B') : null, colorInput('text', S.tab === 'rubric' ? 'Текст' : 'Логотип')),
     m === 'struct' ? h('div', {}, check('twoTone', 'Второй набор красным', (on) => { S.inkB = on ? secondInk() : S.ink; buildPanel(); })) : null,
     range('grain', 'Зерно', 0, 100, 1, pc));
   panel.append(colorSec);
 
   // логотип
   const lg = [check('logo.on', 'Показывать логотип', () => buildPanel())];
-  if (!S.tpl) {
+  if (S.tab === 'rubric') {
+    const more = h('details', { class: 'more', id: 'moreGraphic' }, h('summary', {}, 'Настроить графику шаблона'), ...modeSections(m, false));
+    if (MORE_OPEN) more.open = true;
+    more.addEventListener('toggle', () => { MORE_OPEN = more.open; });
+    panel.append(more);
+  } else {
   if (S.logo.on) {
     lg.push(grid9('logo.pos', 'Место'));
     lg.push(range('logo.size', 'Длина', 6, 90, .5, pc));
@@ -1545,17 +1572,37 @@ async function recordGIF() {
 }
 
 /* ---------- верхняя и нижняя панели ---------- */
-const VISITED = new Set();
+const VISITED = { graphic: new Set(), rubric: new Set() };
 function setMode(m, keep) {
   S.mode = m;
-  if (keep) VISITED.add(m);
-  if (!VISITED.has(m)) { VISITED.add(m); const first = { struct: P_STRUCT, rings: P_RINGS, trail: P_TRAIL }[m][0][1]; const keep = S.logo; applyPreset(first); S.logo = keep; }
+  const V = VISITED[S.tab];
+  if (keep) V.add(m);
+  if (!V.has(m)) { V.add(m); const first = { struct: P_STRUCT, rings: P_RINGS, trail: P_TRAIL }[m][0][1]; const keep = S.logo; applyPreset(first); S.logo = keep; }
   document.querySelectorAll('#modes button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
   $('hint').textContent = m === 'trail' ? 'Тяните фото на макете' : 'Тяните контуры на макете';
   if (!playing) tau = 0;
   buildPanel(); update();
 }
 document.querySelectorAll('#modes button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+/* ---------- вкладки: «Графика» (заготовки без текста) и «Рубрики» (шаблоны с текстом) ----------
+   У каждой вкладки свои настройки: при переключении состояние запоминается и возвращается. */
+const TAB_KEYS = ['mode', 'bg', 'ink', 'inkB', 'text', 'theme', 'twoTone', 'blend', 'grain', 'A', 'B', 'R', 'T', 'logo', 'setTab', 'tpl'];
+const TABSTATE = {};
+const clone = (o) => JSON.parse(JSON.stringify(o));
+function setTab(t) {
+  if (S.tab === t) return;
+  if (S.tab) TABSTATE[S.tab] = clone(Object.fromEntries(TAB_KEYS.map(k => [k, S[k]])));
+  S.tab = t;
+  document.querySelectorAll('#tabsMain button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === t)));
+  $('modes').hidden = t === 'rubric';
+  try { history.replaceState(null, '', t === 'rubric' ? '#rubriki' : '#grafika'); } catch (e) { /* без адреса */ }
+  if (TABSTATE[t]) { Object.assign(S, clone(TABSTATE[t])); setMode(S.mode, true); }
+  else if (t === 'rubric') applyTemplate('lecture');
+  else { S.tpl = null; S.logo.on = false; applyTheme('white'); applyPreset(P_STRUCT[0][1]); setMode('struct', true); }
+}
+document.querySelectorAll('#tabsMain button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+window.addEventListener('hashchange', () => setTab(location.hash === '#rubriki' ? 'rubric' : 'graphic'));
 function buildFormats() {
   const box = $('fmts'); box.replaceChildren();
   for (const [k, name, w, hgt] of FORMATS) {
@@ -1593,10 +1640,9 @@ $('partnerIn').addEventListener('change', (e) => {
 
 /* ---------- старт ---------- */
 setImage(makeDemo(), 'Пример');
-applyPreset(P_STRUCT[0][1]);
 buildFormats();
-applyTemplate('lecture');
-window.__buksir = { S, render, buildScene, sceneSVG, setMode, applyPreset, applyTemplate, TEMPLATES, P_STRUCT, P_RINGS, P_TRAIL, setTau: (t) => { tau = t; render(); }, renderTo,
+setTab(location.hash === '#rubriki' ? 'rubric' : 'graphic');
+window.__buksir = { S, setTab, render, buildScene, sceneSVG, setMode, applyPreset, applyTemplate, TEMPLATES, P_STRUCT, P_RINGS, P_TRAIL, setTau: (t) => { tau = t; render(); }, renderTo,
   setFmt: (f) => { S.fmt = f; buildFormats(); render(); } };
 </script>
 </body></html>
